@@ -1,0 +1,139 @@
+{
+  "DATA_PROCESSING": true,
+  "DATA_PROCESSING_CONFIG": {
+    "NO_PROCESSING": false,
+
+
+    "DATA_CLEANING": true,
+    "DATA_CLEANING_CONFIG": {
+      "COLUMNS_TO_REMOVE": [],
+      "DO_NOT_REMOVE": [],
+      "REMOVE_WHERE_Y_MISSING": true,
+      "REMOVE_ROWS": true,
+      "ROW_REMOVAL_THRESHOLD": 0.6,
+      "REMOVE_COLUMNS": true,
+      "COLUMN_REMOVAL_THRESHOLD": 0.6
+    },
+
+
+    "PREDICTED_COLUMN_NAME": "",
+
+
+    "FEATURE_ENGINEERING": true,
+    "FEATURE_ENGINEERING_CONFIG": {
+      "PROCESS_CATEGORICAL_PREDICTED_COLUMN": false,
+      "DO_NOT_PROCESS": [],
+      "CONTINUOUS_FEATURES": [],
+      "CATEGORICAL_FEATURES": [],
+
+      "CATEGORICAL_THRESHOLD": 0.08,
+      "CONTINUOUS_DATA_CONFIG": {
+        "NUMERIC": {
+          "NOT_PROCESS": false,
+          "OUTLIER_STDEV_FROM_MEAN": 4,
+          "NORMALIZATION_METHOD": "z_score",
+          "POLYNOMIAL_FEATURES": 3
+        },
+        "TEXTUAL": {
+          "WORD_DELIMITERS": "?!|/.,:;'-={}[]()",
+          "MAX_GENERATED_FEATURES": 8
+        }
+      },
+
+      "CATEGORICAL_DATA_CONFIG": {
+        "NUMERIC": {
+          "NOT_PROCESS": false,
+          "METHOD": "one_hot_encode"
+        },
+        "TEXTUAL": {
+          "NOT_PROCESS": false,
+          "METHOD": "one_hot_encode"
+        }
+      }
+    }
+  },
+
+
+
+  "TRAINING": true,
+  "TRAINING_CONFIG": {
+    "TYPE": "evolutionary",
+    "TASK": "",
+    "TIME": "4m",
+    "PREDICTED_COLUMN_NAME": "",
+
+    "DEFAULT_MODEL": "neural_network",
+
+    "NEURAL_NETWORK_CONFIG": {
+      "CRITERION": "MSE",
+      "OPTIMIZER" : "Adam",
+      "LEARNING_RATE": 0.001,
+      "MOMENTUM": 0.9,
+      "HIDDEN_LAYERS": "smooth",
+      "ACTIVATIONS": "sigmoid",
+      "DROPOUT": 0.2
+    },
+
+    "RANDOM_FOREST_CONFIG": {
+      "CLASSIFIER": {
+        "N_ESTIMATORS": 100,
+        "CRITERION": "gini",
+        "MIN_SAMPLES_SPLIT": 2,
+        "MAX_FEATURES": "sqrt"
+      },
+
+      "REGRESSOR": {
+        "N_ESTIMATORS": 100,
+        "CRITERION": "mse",
+        "MIN_SAMPLES_SPLIT": 2,
+        "MAX_FEATURES": "sqrt"
+      }
+    },
+
+    "SVM_CONFIG": {
+      "REGULARIZATION_C": 0.4,
+      "KERNEL": "poly",
+      "POLY_DEGREE": 1,
+      "GAMMA": "scale",
+      "DECISION_FUNCTION_SHAPE": "ovr"
+    },
+
+
+
+
+    "EVOLUTIONARY_MODEL_CONFIG": {
+      "MODELS": ["neural_network"],
+      "GENERAL_CRITERION": "MSE",
+      "POPULATION_SIZE": 16,
+      "SEARCHING_TIME_SHARE": 0.5,
+
+      "NEURAL_NETWORK_EVOL_CONFIG": {
+        "OPTIMIZER_CHOICE" : ["Adam","SGD"],
+        "LEARNING_RATE_RANGE": [0.0001, 0.01],
+        "MOMENTUM_RANGE": [0,1],
+        "HIDDEN_LAYERS_CHOICES": ["smooth",[10,32,8]],
+        "ACTIVATION_CHOICES": ["sigmoid","relu","linear"],
+        "DROPOUT_RANGE": [0,1]
+      }
+    }
+
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

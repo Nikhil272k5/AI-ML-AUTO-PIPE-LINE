@@ -1,0 +1,167 @@
+--- Configuration file documentation
+
+- Purpose: the config.json file located in the Pipeline package tells the whole pipeline how to operate; thus,
+            all the configurable items from the whole data flow go there; this file allows the user to configure
+            the flow and the operations that happen inside.
+
+
+- Location: unless building a pipeline with explicit configuration dictionary, the file should not be moved
+            from the Pipeline package since it is by default read from there; however, if default_config_path
+            parameter is passed to the Pipeline constructor, this will be considered the config file path
+
+- Attributes: below there will be a tree view similar to the json file where each attribute is explained; each description
+            will contain the range of possible values and a short description
+
+
+ {
+  "DATA_PROCESSING": true,                      ---> [true, false] - decide whether or not the pipeline does data processing
+  "DATA_PROCESSING_CONFIG": {                   ---> if DATA_PROCESSING is true, provide this object
+    "NO_PROCESSING": false,                     ---> [true, false] - decide whether the pipeline should do any processing or not
+
+    "DATA_CLEANING": true,                      ---> [true, false] - decide whether data cleaning should be performed
+    "DATA_CLEANING_CONFIG": {                   ---> if DATA_CLEANING is true, provide this object
+      "COLUMNS_TO_REMOVE": [],                  ---> [<any column name>] - any column that is marked explicitly to be removed
+      "DO_NOT_REMOVE": [],                      ---> [<any column name>] - explicitly keep this columns
+      "REMOVE_WHERE_Y_MISSING": true,           ---> [true, false] - remove entries that do not have the output column
+      "REMOVE_ROWS": true,                      ---> [true, false] - decide whether row removal is allowed
+      "ROW_REMOVAL_THRESHOLD": 0.6,             ---> [0 - 1] - the threshold of row removal ( there has to be 60%(by default) empty columns in order to remove the row)
+      "REMOVE_COLUMNS": true,                   ---> [true, false] - decide whether column removal is allowed
+      "COLUMN_REMOVAL_THRESHOLD": 0.6           ---> [0 - 1] - the threshold of column removal ( there has to be 60%(by default) empty rows in order to remove the column)
+    },
+
+
+    "PREDICTED_COLUMN_NAME": "Price",           ---> <predicted column name> the name of the output column
+
+
+    "FEATURE_ENGINEERING": true,                ---> [true, false] - decide whether feature engineering is allowed
+    "FEATURE_ENGINEERING_CONFIG": {             ---> if FEATURE_ENGINEERING is true, provide this object
+      "PROCESS_CATEGORICAL_PREDICTED_COLUMN": false,    ---> [true, false] - decide whether to one-hot-encode the output column
+      "DO_NOT_PROCESS": ["Id"],                 ---> [<any column name>] - explicitly set dome columns to not be processed
+      "CONTINUOUS_FEATURES": [],                ---> [<any column name>] - provide column names that are known to have a continuous distribution
+      "CATEGORICAL_FEATURES": [],               ---> [<any column name>] - provide column names that are known to have a distribution distribution
+                                                |
+                                                \ in both cases, the pipeline will decide by itself whether a column is continuous or discrete if not provided
+
+
+      "CATEGORICAL_THRESHOLD": 0.08,            ---> [0 - 1] - the threshold ratio between the unique values and the total values count
+                                                        (example: the number of unique values has to be 8% or more from the total number to be considered discrete)
+
+      "CONTINUOUS_DATA_CONFIG": {               ---> configuration for the continuous data transformations
+        "NUMERIC": {                            ---> numeric continuous data
+          "NOT_PROCESS": false,                 ---> [true, false] - decide whether to process this type of data
+          "OUTLIER_STDEV_FROM_MEAN": 5,         ---> [0-inf] - decide how many standard deviations from the mean does an outlier mean (for value capping)
+          "NORMALIZATION_METHOD": "z_score",    ---> "z_score"/"min_max" - decide what normalization technique is used
+          "POLYNOMIAL_FEATURES": 3              ---> [1-inf] - decide how many polynomial features to create (example: for a feature x there will be created x, x^2, x^3)
+        },
+        "TEXTUAL": {                            ---> textual continuous data
+          "WORD_DELIMITERS": "?!|/.,:;'-={}[]()",   ---> which word delimiters to use in stemming words
+          "MAX_GENERATED_FEATURES": 3           ---> how many features to be generated (sorted by their frequency)
+        }
+      },
+
+      "CATEGORICAL_DATA_CONFIG": {              ---> configuration for the discrete/categorical data transformations
+        "NUMERIC": {                            ---> numeric discrete data
+          "NOT_PROCESS": false,                 ---> [true, false] - decide whether to process this type of data
+          "METHOD": "one_hot_encode"            ---> "one_hot_encode" - decide the algorithm used for encoding categories
+        },
+        "TEXTUAL": {                            ---> textual discrete dat
+          "NOT_PROCESS": false,                 ---> [true, false] - decide whether to process this type of data
+          "METHOD": "one_hot_encode"            ---> "one_hot_encode" - decide the algorithm used for encoding categories
+        }
+      }
+    }
+  },
+
+
+
+  "TRAINING": true,                             ---> [true, false] - decide whether training should be done
+  "TRAINING_CONFIG": {                          ---> if TRAINING is true, provide this object
+    "TYPE": "default",                          ---> "default"/"evolutionary" - decide the method to be used
+                                                        \_  default: using the default model provided below
+                                                         \_  evolutionary: searching for the best model as defined below
+
+    "TASK": ""                                  ---> "" / "classification" / "regression" - the type of learning that the user wants to be done ("" for automatic decision)
+    "TIME": "1m",                               ---> "xd yh zm ts" - the total time of training, expressed in days(d), hours(h), minutes(m), seconds(s) (example: "1d 2h 0m 4s"
+    "PREDICTED_COLUMN_NAME": "Price",           ---> <output_column_name> - the name of the predicted column
+
+    "DEFAULT_MODEL": "neural_network",          ---> "neural_network"/"random_forest"/"svm" - the default training method (TYPE should be "default")
+
+    "NEURAL_NETWORK_CONFIG": {                  ---> if DEFAULT_MODEL is "neural_network", provide this object
+      "CRITERION": "MSE"                        ---> "MSE" / "BCE" / "CrossEntropy" / "LogLikelihood" / "PoissonLogLikelihood" - the loss function used
+      "OPTIMIZER" : "Adam",                     ---> "Adam"/"SGD" - the optimizer used for the neural network
+      "LEARNING_RATE": 0.002,                   ---> positive float number - the learning rate to be used in training
+      "MOMENTUM": 0.1,                          ---> positive float number - if OPTIMIZER is "SGD" - provide this
+      "HIDDEN_LAYERS": [32,16],                 ---> "smooth"/list of numbers - the hidden layers of the model
+                                                    \_ "smooth": from input to output, each layer dimension is the one from before divided by 2
+                                                     \_ list of numbers: the exact layer dimensions
+      "ACTIVATIONS": "sigmoid",                 ---> "sigmoid"/"relu"/"linear" or list of them - the activation function used
+                                                        \_ one for every layer
+                                                         \_list of activation for each layer
+      "DROPOUT": 0.1                            ---> positive float or list of floats - the general dropout used or dropout for each layer
+      "BATCH_SIZE": 64                          ---> specifies the batch size of the neural network
+    },
+
+    "RANDOM_FOREST_CONFIG": {                   ---> if DEFAULT_MODEL is "random_forest", provide this object
+      "CLASSIFIER": {                           ---> config for the classification random forest
+        "N_ESTIMATORS": 100,                    ---> positive integer - number of estimators to use
+        "CRITERION": "gini",                    ---> "gini" / "entropy" - the criterion used for optimisation
+        "MIN_SAMPLES_SPLIT": 2,                 ---> positive integer - required samples to split a node
+        "MAX_FEATURES": "auto"                  ---> "auto" / "sqrt" / "log2" / "none" - maximum features used in learning
+      },
+
+      "REGRESSOR": {                            ---> config for the regression random forest
+        "N_ESTIMATORS": 100,                    ---> positive integer - number of estimators to use
+        "CRITERION": "mse",                     ---> "mse" / "mae" - the criterion used for optimisation
+        "MIN_SAMPLES_SPLIT": 2,                 ---> positive integer - required samples to split a node
+        "MAX_FEATURES": "sqrt"                  ---> "auto" / "sqrt" / "log2" / "none" maximum features used in learning
+      }
+    },
+
+    "SVM_CONFIG": {                             ---> if DEFAULT_MODEL is "svm", provide this object
+      "REGULARIZATION_C": 0.4,                  ---> positve float - the regularization parameter
+      "KERNEL": "poly",                         ---> "linear" / "poly" / "rbf" / "sigmoid" - the kernel type
+      "POLY_DEGREE": 1,                         ---> positive integer - the deree of the polynomial kernel function
+      "GAMMA": "scale",                         ---> "scale" / "auto" - kernel coefficient
+      "DECISION_FUNCTION_SHAPE": "ovo"          ---> "ovo" / "ovr" - classification algorithm
+    }
+
+    "EVOLUTIONARY_MODEL_CONFIG": {              ---> if TYPE is "evolutionary", provide this object
+      "MODELS": ["neural_network"]              ---> list of allowed models - the models to search for
+
+      "GENERAL_CRITERION": "accuracy",          ---> "mean_absolute_error", "mean_squared_error", "mean_squared_log_error", "accuracy", "balanced_accuracy"
+                                                           \_ the generic criterion used in evaluation
+      "POPULATION_SIZE": 8,                     ---> positive integer, the initial model population
+      "SEARCHING_TIME_SHARE": 0.5,              ---> float in [0.1, 0.9] - the percentage of time taken by searching
+
+      "NEURAL_NETWORK_EVOL_CONFIG": {           ---> the choice configuration for neural networks
+                                                            \_(the documentation below presents the recommended ranges and all the possible choices; feel free to remove if necessary)
+        "OPTIMIZER_CHOICE" : ["Adam","SGD"],    ---> the optimizer choice for the network
+        "LEARNING_RATE_RANGE": [0.000001, 0.1], ---> the range for the random learning rate
+        "MOMENTUM_RANGE": [0,1],                ---> the range for the random momentum (used only by SGD)
+        "HIDDEN_LAYERS_CHOICES": ["smooth",[10,32,8]],      ---> the choice of hidden layers (either smooth, as defined above in the neural network configuration,
+                                                                            wither as a vector like [min_layer_size, max_layer_size, max_layers]
+        "ACTIVATION_CHOICES": ["sigmoid","relu","linear"],  ---> the choices for the activation functions
+        "DROPOUT_RANGE": [0,1]                              ---> the range for the random dropout
+        "BATCH_SIZE_RANGE": [1,128]                         ---> the range for the batch size - list like [min_possible_batch_size, max_possible_batch_size]
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
